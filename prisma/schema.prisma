@@ -1,0 +1,77 @@
+// Prisma schema for Mini Social Feed App
+// Production-ready relational structure
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  age       Int?
+  email     String   @unique
+  username  String   @unique
+  password  String
+  fcmToken  String?
+
+  posts     Post[]
+  likes     Like[]
+  comments  Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([username])
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  content   String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  likes     Like[]
+  comments  Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([authorId])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  userId    String
+  postId    String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+  @@index([userId])
+}

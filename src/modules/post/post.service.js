@@ -1,0 +1,118 @@
+import { prisma } from "../../config/prisma.js";
+
+export const createPost = async (userId, content) => {
+  return prisma.post.create({
+    data: {
+      content,
+      authorId: userId,
+    },
+  });
+};
+
+export const getGlobalFeed = async (currentUserId, page = 1, limit = 10) => {
+  const skip = (page - 1) * limit;
+
+  const posts = await prisma.post.findMany({
+    skip,
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+        },
+      },
+      likes: true,
+      comments: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return posts.map((post) => ({
+    id: post.id,
+    author: post.author.name,
+    username: post.author.username,
+    content: post.content,
+    createdAt: post.createdAt,
+    likes: post.likes.length,
+    liked: post.likes.some((like) => like.userId === currentUserId),
+    comments: post.comments.map((comment) => ({
+      id: comment.id,
+      author: comment.user.name,
+      username: comment.user.username,
+      content: comment.content,
+      createdAt: comment.createdAt,
+    })),
+  }));
+};
+
+export const toggleLike = async (userId, postId) => {
+  const existingLike = await prisma.like.findUnique({
+    where: {
+      userId_postId: {
+        userId,
+        postId,
+      },
+    },
+  });
+
+  if (existingLike) {
+    await prisma.like.delete({
+      where: { id: existingLike.id },
+    });
+    return { liked: false };
+  }
+
+  await prisma.like.create({
+    data: { userId, postId },
+  });
+
+  return { liked: true };
+};
+
+export const addComment = async (userId, postId, content) => {
+  // Check if post exists
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+  });
+
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
+
+  const comment = await prisma.comment.create({
+    data: {
+      content,
+      userId,
+      postId,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+        },
+      },
+    },
+  });
+
+  return {
+    id: comment.id,
+    author: comment.user.name,
+    username: comment.user.username,
+    content: comment.content,
+    createdAt: comment.createdAt,
+  };
+};
