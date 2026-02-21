@@ -3,10 +3,16 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import morgan from "morgan";
+
+import path from "path";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
+
 import { prisma } from "./config/prisma.js";
 import { globalErrorHandler } from "./middlewares/error.middleware.js";
 
 import authRoutes from "./modules/auth/auth.route.js";
+import notificationRoutes from "./modules/notification/notification.route.js";
 import postRoutes from "./modules/post/post.route.js";
 import userRoutes from "./modules/user/user.route.js";
 
@@ -43,6 +49,11 @@ app.get("/health/db", async (req, res) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/posts", postRoutes);
+
+app.use("/api/v1/notifications", notificationRoutes);
+
+const swaggerDocument = YAML.load(path.resolve("docs/openapi.yaml"));
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Global Error Handler
 app.use(globalErrorHandler);

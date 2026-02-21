@@ -10,6 +10,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum NotificationType {
+  LIKE
+  COMMENT
+}
+
+
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -19,15 +25,14 @@ model User {
   password  String
   fcmToken  String?
 
-  posts     Post[]
-  likes     Like[]
-  comments  Comment[]
+  posts        Post[]
+  likes        Like[]
+  comments     Comment[]
+  notificationsReceived Notification[] @relation("Recipient")
+  notificationsSent     Notification[] @relation("Sender")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@index([email])
-  @@index([username])
 }
 
 model Post {
@@ -38,6 +43,7 @@ model Post {
 
   likes     Like[]
   comments  Comment[]
+  notifications Notification[]  
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -74,4 +80,22 @@ model Comment {
 
   @@index([postId])
   @@index([userId])
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  type        NotificationType
+  recipientId String
+  senderId    String
+  postId      String?
+  read        Boolean  @default(false)
+
+  recipient   User     @relation("Recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender      User     @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@index([recipientId])
+  @@index([postId])
 }

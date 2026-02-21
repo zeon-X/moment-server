@@ -50,3 +50,12 @@ export const getMe = asyncHandler(async (req, res) => {
     },
   });
 });
+
+export const checkUsername = asyncHandler(async (req, res) => {
+  const available = await authService.isUsernameAvailable(req.query.username);
+
+  res.status(200).json({
+    success: true,
+    available,
+  });
+});

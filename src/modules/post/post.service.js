@@ -1,4 +1,6 @@
+import { NotificationType } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
+import { createNotification } from "../notification/notification.service.js";
 
 export const createPost = async (userId, content) => {
   return prisma.post.create({
@@ -58,6 +60,14 @@ export const getGlobalFeed = async (currentUserId, page = 1, limit = 10) => {
 };
 
 export const toggleLike = async (userId, postId) => {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+  });
+
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
+
   const existingLike = await prisma.like.findUnique({
     where: {
       userId_postId: {
@@ -76,6 +86,13 @@ export const toggleLike = async (userId, postId) => {
 
   await prisma.like.create({
     data: { userId, postId },
+  });
+
+  await createNotification({
+    type: NotificationType.LIKE,
+    recipientId: post.authorId,
+    senderId: userId,
+    postId,
   });
 
   return { liked: true };
@@ -106,6 +123,13 @@ export const addComment = async (userId, postId, content) => {
         },
       },
     },
+  });
+
+  await createNotification({
+    type: NotificationType.COMMENT,
+    recipientId: post.authorId,
+    senderId: userId,
+    postId,
   });
 
   return {

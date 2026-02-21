@@ -51,3 +51,11 @@ export const loginUser = async (identifier, password) => {
 
   return { user, token };
 };
+
+export const isUsernameAvailable = async (username) => {
+  const existingUser = await prisma.user.findUnique({
+    where: { username },
+  });
+
+  return !existingUser;
+};
