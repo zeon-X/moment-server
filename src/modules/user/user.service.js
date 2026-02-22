@@ -71,3 +71,26 @@ export const getUserProfile = async (username, currentUserId) => {
     posts: formattedPosts,
   };
 };
+
+export const getAllUsers = async (page = 1, limit = 10) => {
+  const skip = (page - 1) * limit;
+
+  const users = await prisma.user.findMany({
+    skip,
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    include: {
+      _count: {
+        select: { posts: true },
+      },
+    },
+  });
+
+  return users.map((user) => ({
+    id: user.id,
+    name: user.name,
+    username: user.username,
+    age: user.age,
+    posts: user._count.posts,
+  }));
+};
