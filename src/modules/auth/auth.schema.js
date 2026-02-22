@@ -17,6 +17,12 @@ export const loginSchema = z.object({
   }),
 });
 
+export const fcmTokenSchema = z.object({
+  body: z.object({
+    token: z.string().min(1, "FCM token is required"),
+  }),
+});
+
 export const checkUsernameSchema = z.object({
   query: z.object({
     username: z
