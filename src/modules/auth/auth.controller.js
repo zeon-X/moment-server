@@ -1,6 +1,15 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as authService from "./auth.service.js";
 
+export const saveToken = asyncHandler(async (req, res) => {
+  await authService.saveFcmToken(req.user.id, req.body.token);
+
+  res.status(200).json({
+    success: true,
+    message: "FCM token saved",
+  });
+});
+
 export const signup = asyncHandler(async (req, res) => {
   const { user, token } = await authService.signupUser(req.body);
 

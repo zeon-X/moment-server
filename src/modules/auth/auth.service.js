@@ -3,6 +3,13 @@ import { ApiError } from "../../utils/ApiError.js";
 import { generateToken } from "../../utils/generateToken.js";
 import { comparePassword, hashPassword } from "../../utils/hashPassword.js";
 
+export const saveFcmToken = async (userId, token) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { fcmToken: token },
+  });
+};
+
 export const signupUser = async (data) => {
   const existingUser = await prisma.user.findFirst({
     where: {

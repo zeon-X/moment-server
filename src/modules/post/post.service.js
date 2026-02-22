@@ -1,6 +1,10 @@
 import { NotificationType } from "@prisma/client";
 import { prisma } from "../../config/prisma.js";
-import { createNotification } from "../notification/notification.service.js";
+import {
+  createNotification,
+  getUnreadCount,
+  sendPushNotification,
+} from "../notification/notification.service.js";
 
 export const createPost = async (userId, content) => {
   return prisma.post.create({
@@ -95,6 +99,24 @@ export const toggleLike = async (userId, postId) => {
     postId,
   });
 
+  const unreadCount = await getUnreadCount(post.authorId);
+
+  const sender = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true },
+  });
+
+  const recipient = await prisma.user.findUnique({
+    where: { id: post.authorId },
+  });
+
+  await sendPushNotification({
+    token: recipient?.fcmToken,
+    title: "New Like ❤️",
+    body: `${sender.name} liked your post`,
+    badge: unreadCount,
+  });
+
   return { liked: true };
 };
 
@@ -130,6 +152,24 @@ export const addComment = async (userId, postId, content) => {
     recipientId: post.authorId,
     senderId: userId,
     postId,
+  });
+
+  const unreadCount = await getUnreadCount(post.authorId);
+
+  const sender = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true },
+  });
+
+  const recipient = await prisma.user.findUnique({
+    where: { id: post.authorId },
+  });
+
+  await sendPushNotification({
+    token: recipient?.fcmToken,
+    title: "New Comment 💬",
+    body: `${sender.name} commented on your post`,
+    badge: unreadCount,
   });
 
   return {

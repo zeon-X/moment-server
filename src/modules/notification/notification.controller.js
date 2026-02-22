@@ -18,3 +18,12 @@ export const readNotification = asyncHandler(async (req, res) => {
     message: "Notification marked as read",
   });
 });
+
+export const getUnreadNotificationCount = asyncHandler(async (req, res) => {
+  const count = await notificationService.getUnreadCount(req.user.id);
+
+  res.status(200).json({
+    success: true,
+    unreadCount: count,
+  });
+});

@@ -1,3 +1,4 @@
+import { firebaseAdmin } from "../../config/firebase.js";
 import { prisma } from "../../config/prisma.js";
 
 export const createNotification = async ({
@@ -61,4 +62,41 @@ export const markAsRead = async (notificationId, userId) => {
     },
     data: { read: true },
   });
+};
+
+export const getUnreadCount = async (userId) => {
+  return prisma.notification.count({
+    where: {
+      recipientId: userId,
+      read: false,
+    },
+  });
+};
+
+export const sendPushNotification = async ({ token, title, body, badge }) => {
+  if (!token) return;
+
+  try {
+    await firebaseAdmin.messaging().send({
+      token,
+      notification: {
+        title,
+        body,
+      },
+      apns: {
+        payload: {
+          aps: {
+            badge,
+          },
+        },
+      },
+      android: {
+        notification: {
+          notificationCount: badge,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("FCM error:", error.message);
+  }
 };

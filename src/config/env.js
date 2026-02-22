@@ -1,3 +1,4 @@
+//src/config/env.js
 import dotenv from "dotenv";
 import { z } from "zod";
 
@@ -9,6 +10,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string(),
   JWT_EXPIRES_IN: z.string(),
   NODE_ENV: z.string(),
+  FIREBASE_SERVICE_ACCOUNT: z.string(),
 });
 
 const parsed = envSchema.safeParse(process.env);
