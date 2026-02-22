@@ -20,8 +20,13 @@ export const protect = asyncHandler(async (req, res, next) => {
   }
 
   // Verify token
-  const decoded = jwt.verify(token, env.JWT_SECRET);
+  let decoded;
 
+  try {
+    decoded = jwt.verify(token, env.JWT_SECRET);
+  } catch (error) {
+    throw new ApiError(401, "Invalid or expired token");
+  }
   // Get user from DB
   const user = await prisma.user.findUnique({
     where: { id: decoded.id },
