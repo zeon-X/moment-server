@@ -97,6 +97,13 @@ export const sendPushNotification = async ({ token, title, body, badge }) => {
       },
     });
   } catch (error) {
+    if (error.code === "messaging/registration-token-not-registered") {
+      // Delete invalid token from DB
+      await prisma.user.update({
+        where: { id: recipient.id },
+        data: { fcmToken: null },
+      });
+    }
     console.error("FCM error:", error.message);
   }
 };
