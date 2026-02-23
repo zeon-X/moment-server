@@ -115,6 +115,7 @@ export const toggleLike = async (userId, postId) => {
     title: "New Like ❤️",
     body: `${sender.name} liked your post`,
     badge: unreadCount,
+    recipientId: post.authorId,
   });
 
   return { liked: true };
@@ -170,6 +171,7 @@ export const addComment = async (userId, postId, content) => {
     title: "New Comment 💬",
     body: `${sender.name} commented on your post`,
     badge: unreadCount,
+    recipientId: post.authorId,
   });
 
   return {

@@ -73,7 +73,13 @@ export const getUnreadCount = async (userId) => {
   });
 };
 
-export const sendPushNotification = async ({ token, title, body, badge }) => {
+export const sendPushNotification = async ({
+  token,
+  title,
+  body,
+  badge,
+  recipientId,
+}) => {
   if (!token) return;
 
   try {
@@ -100,7 +106,7 @@ export const sendPushNotification = async ({ token, title, body, badge }) => {
     if (error.code === "messaging/registration-token-not-registered") {
       // Delete invalid token from DB
       await prisma.user.update({
-        where: { id: recipient.id },
+        where: { id: recipientId },
         data: { fcmToken: null },
       });
     }
