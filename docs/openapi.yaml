@@ -16,7 +16,6 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
   schemas:
     User:
       type: object
@@ -29,7 +28,6 @@ components:
           type: string
         username:
           type: string
-
     Comment:
       type: object
       properties:
@@ -44,7 +42,6 @@ components:
         createdAt:
           type: string
           format: date-time
-
     Post:
       type: object
       properties:
@@ -67,7 +64,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Comment"
-
     AuthResponse:
       type: object
       properties:
@@ -83,14 +79,15 @@ security:
 
 tags:
   - name: Auth
-  - name: Posts
   - name: Users
+  - name: Posts
+  - name: Notifications
 
 paths:
-  /api/auth/signup:
+  # Auth Module
+  /api/v1/auth/signup:
     post:
-      tags:
-        - Auth
+      tags: [Auth]
       summary: Register new user
       requestBody:
         required: true
@@ -98,11 +95,7 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - name
-                - email
-                - username
-                - password
+              required: [name, email, username, password]
               properties:
                 name:
                   type: string
@@ -117,11 +110,9 @@ paths:
       responses:
         201:
           description: User created successfully
-
-  /api/auth/login:
+  /api/v1/auth/login:
     post:
-      tags:
-        - Auth
+      tags: [Auth]
       summary: Login using email or username
       requestBody:
         required: true
@@ -129,9 +120,7 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - identifier
-                - password
+              required: [identifier, password]
               properties:
                 identifier:
                   type: string
@@ -144,11 +133,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
-
-  /api/auth/me:
+  /api/v1/auth/me:
     get:
-      tags:
-        - Auth
+      tags: [Auth]
       summary: Get current logged-in user
       security:
         - bearerAuth: []
@@ -159,103 +146,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-
-  /api/posts:
-    get:
-      tags:
-        - Posts
-      summary: Get global feed
+  /api/v1/auth/fcm-token:
+    post:
+      tags: [Auth]
+      summary: Save FCM token for notifications
       security:
         - bearerAuth: []
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-        - name: limit
-          in: query
-          schema:
-            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
       responses:
         200:
-          description: List of posts
+          description: Token saved successfully
+  /api/v1/auth/check-username:
+    get:
+      tags: [Auth]
+      summary: Check if username is available
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Username check result
+
+  # User Module
+  /api/v1/users:
+    get:
+      tags: [Users]
+      summary: Get community members
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: List of community members
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Post"
-
-    post:
-      tags:
-        - Posts
-      summary: Create new post
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - content
-              properties:
-                content:
-                  type: string
-      responses:
-        201:
-          description: Post created successfully
-
-  /api/posts/{id}/like:
-    post:
-      tags:
-        - Posts
-      summary: Toggle like on post
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Like toggled successfully
-
-  /api/posts/{id}/comment:
-    post:
-      tags:
-        - Posts
-      summary: Add comment to post
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - content
-              properties:
-                content:
-                  type: string
-      responses:
-        201:
-          description: Comment added successfully
-
-  /api/users/{username}:
+                  $ref: "#/components/schemas/User"
+  /api/v1/users/{username}:
     get:
-      tags:
-        - Users
+      tags: [Users]
       summary: Get user profile
       security:
         - bearerAuth: []
@@ -294,3 +236,128 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Post"
+
+  # Post Module
+  /api/v1/posts:
+    get:
+      tags: [Posts]
+      summary: Get global feed
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+    post:
+      tags: [Posts]
+      summary: Create new post
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+      responses:
+        201:
+          description: Post created successfully
+  /api/v1/posts/{id}/like:
+    post:
+      tags: [Posts]
+      summary: Toggle like on post
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Like toggled successfully
+  /api/v1/posts/{id}/comment:
+    post:
+      tags: [Posts]
+      summary: Add comment to post
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+      responses:
+        201:
+          description: Comment added successfully
+
+  # Notification Module
+  /api/v1/notifications:
+    get:
+      tags: [Notifications]
+      summary: Get user notifications
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+  /api/v1/notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark notification as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Notification marked as read
+  /api/v1/notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Get unread notification count
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Unread notification count
