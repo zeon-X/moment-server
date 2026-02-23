@@ -17,16 +17,23 @@ This project provides a RESTful API for a social feed platform, supporting user 
 
 ## Setup
 
-1. Install dependencies:
+1. Clone the repository
+
+   ```sh
+   git clone https://github.com/zeon-X/moment-server
+   cd moment-server
+   ```
+
+2. Install dependencies:
    ```bash
    npm install
    ```
-2. Configure environment variables in `src/config/env.js`.
-3. Run database migrations:
+3. Configure environment variables in `.env` following the `.env.example`.
+4. Run database migrations:
    ```bash
    npx prisma migrate deploy
    ```
-4. Start the server:
+5. Start the server:
    ```bash
    npm run dev
    ```
