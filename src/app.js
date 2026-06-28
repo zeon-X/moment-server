@@ -42,7 +42,7 @@ app.get("/health/db", async (req, res) => {
     await prisma.$queryRaw`SELECT 1`;
     res.json({ status: "DB Connected" });
   } catch {
-    res.status(500).json({ status: "DB Not Connected" });
+    res.status(503).json({ status: "DB Not Connected" });
   }
 });
 

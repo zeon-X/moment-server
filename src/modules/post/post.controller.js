@@ -1,4 +1,5 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { getPaginationParams } from "../../utils/pagination.js";
 import * as postService from "./post.service.js";
 
 export const createPost = asyncHandler(async (req, res) => {
@@ -11,14 +12,21 @@ export const createPost = asyncHandler(async (req, res) => {
 });
 
 export const getFeed = asyncHandler(async (req, res) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
+  const { page, limit } = getPaginationParams(req.query);
+  const search = (req.query.search || req.query.q || "").trim();
+  const authorUsername = (req.query.authorUsername || "").trim();
 
-  const posts = await postService.getGlobalFeed(req.user.id, page, limit);
+  const feed = await postService.getGlobalFeed(req.user.id, {
+    page,
+    limit,
+    search,
+    authorUsername,
+  });
 
   res.status(200).json({
     success: true,
-    data: posts,
+    data: feed.items,
+    pagination: feed.pagination,
   });
 });
 
@@ -28,6 +36,7 @@ export const likePost = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     liked: result.liked,
+    likeCount: result.likeCount,
   });
 });
 

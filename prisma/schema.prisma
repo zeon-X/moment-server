@@ -24,6 +24,9 @@ model User {
   username  String   @unique
   password  String
   fcmToken  String?
+  postCount    Int @default(0)
+  commentCount Int @default(0)
+  likeCount    Int @default(0)
 
   posts        Post[]
   likes        Like[]
